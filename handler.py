@@ -1,5 +1,6 @@
 """RunPod serverless handler entrypoint for Base44 Diarization Worker."""
 import os
+os.environ["HF_TOKEN"] = os.environ.get("RUNPOD_SECRET_HF_TOKEN", "") 
 import json
 import traceback
 from typing import Any, Dict
