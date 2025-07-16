@@ -23,9 +23,15 @@ def _get_env_int(name: str, default: int) -> int:
         return default
 
 def load_config() -> Config:
-    token = os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+    # 🛠 כאן הוספנו תמיכה בטוקן מ-RunPod
+    token = (
+        os.getenv("HF_TOKEN") or
+        os.getenv("HUGGING_FACE_HUB_TOKEN") or
+        os.getenv("HUGGINGFACE_HUB_TOKEN") or
+        os.getenv("RUNPOD_SECRET_HF_TOKEN")  # ← זה מה שאתה צריך ב־RunPod
+    )
     if not token:
-        raise RuntimeError("HF_TOKEN (or HUGGING_FACE_HUB_TOKEN) is required to load pyannote models.")
+        raise RuntimeError("Missing HF_TOKEN / HUGGINGFACE_HUB_TOKEN / RUNPOD_SECRET_HF_TOKEN")
     cfg = Config(
         HF_TOKEN=token,
         MODEL_NAME=os.getenv("MODEL_NAME", "pyannote/speaker-diarization-3.1"),
@@ -51,9 +57,8 @@ def get_config() -> Config:
 
 def log(msg: str, level: str = "info"):
     cfg = get_config()
-    # simple level gating
-    order = {"debug":0,"info":1,"warn":2,"error":3}
-    target = order.get(cfg.RP_LOG_LEVEL,1)
-    lvl = order.get(level,1)
+    order = {"debug": 0, "info": 1, "warn": 2, "error": 3}
+    target = order.get(cfg.RP_LOG_LEVEL, 1)
+    lvl = order.get(level, 1)
     if lvl >= target:
         print(f"[{level.upper()}] {msg}", flush=True)
