@@ -24,6 +24,7 @@ def _get_env_int(name: str, default: int) -> int:
 
 def load_config() -> Config:
     token = os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+    print(f"[DEBUG] HF_TOKEN loaded: {token[:6]}...", flush=True)
     if not token:
         raise RuntimeError("HF_TOKEN (or HUGGING_FACE_HUB_TOKEN) is required to load pyannote models.")
     cfg = Config(
