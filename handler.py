@@ -71,13 +71,5 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
 # ------------------------------------------------------------------
 # RunPod bootstrap
 # ------------------------------------------------------------------
-if __name__ == "__main__":
-    import sys
-    if not sys.stdin.isatty():
-        data = json.load(sys.stdin)
-        print(json.dumps(handler(data), indent=2))
-    else:
-        print("No stdin JSON; nothing to do.")
-
 import runpod
 runpod.serverless.start({"handler": handler})
