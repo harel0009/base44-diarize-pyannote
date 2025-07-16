@@ -1,0 +1,9 @@
+{
+  "input": {
+    "mode": "url",
+    "url": "https://example.com/demo_audio.wav",
+    "min_speakers": 2,
+    "max_speakers": 4,
+    "return_rttm": true
+  }
+}
