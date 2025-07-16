@@ -73,3 +73,4 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
 # ------------------------------------------------------------------
 import runpod
 runpod.serverless.start({"handler": handler})
+
