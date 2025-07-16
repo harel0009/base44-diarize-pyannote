@@ -1,6 +1,13 @@
 """RunPod serverless handler entrypoint for Base44 Diarization Worker."""
+
 import os
-os.environ["HF_TOKEN"] = os.environ.get("RUNPOD_SECRET_HF_TOKEN") or os.environ.get("HF_TOKEN", "") 
+
+# ------------------------------------------------------------------
+# Inject HF token from RunPod secret if available
+# ------------------------------------------------------------------
+if "RUNPOD_SECRET_HF_TOKEN" in os.environ and os.environ["RUNPOD_SECRET_HF_TOKEN"]:
+    os.environ["HF_TOKEN"] = os.environ["RUNPOD_SECRET_HF_TOKEN"]
+
 import json
 import traceback
 from typing import Any, Dict
@@ -9,7 +16,9 @@ from env_config import get_config, get_device, log
 from audio_io import load_audio_to_path, AudioFetchError, AudioDecodeError, AudioProcessError
 from diarize_core import load_pipeline, run_diarization, annotation_to_segments, annotation_to_rttm
 
-# Eager load so first request is faster (or do lazy; up to you)
+# ------------------------------------------------------------------
+# Model and pipeline loading (eager for performance)
+# ------------------------------------------------------------------
 _cfg = get_config()
 _DEVICE = get_device()
 _PIPE = load_pipeline(_cfg.MODEL_NAME, _cfg.HF_TOKEN, _DEVICE)
@@ -25,6 +34,7 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
         mode = inp.get("mode")
         if mode not in ("url", "blob"):
             return _error("'mode' must be 'url' or 'blob'", "MODE_REQUIRED")
+
         url = inp.get("url")
         b64 = inp.get("base64")
         min_speakers = inp.get("min_speakers")
@@ -62,8 +72,7 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
 # RunPod bootstrap
 # ------------------------------------------------------------------
 if __name__ == "__main__":
-    # optional local test: python handler.py < test_input.json
-    import sys, json
+    import sys
     if not sys.stdin.isatty():
         data = json.load(sys.stdin)
         print(json.dumps(handler(data), indent=2))
