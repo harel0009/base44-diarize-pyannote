@@ -1,4 +1,4 @@
-# Base44 Pyannote Diarization Worker (RunPod Serverless)
+sd# Base44 Pyannote Diarization Worker (RunPod Serverless)
 
 **Purpose:** Accept an audio file (URL or Base64 blob), run `pyannote/speaker-diarization-3.1`, and return speaker segments `[start,end,speaker]` as JSON. Designed to be deployed as a RunPod Serverless Endpoint and called from the Base44 platform.
 
