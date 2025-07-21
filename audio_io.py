@@ -1,4 +1,4 @@
-"""Audio loading + normalization utilities.
+"""Audio loading + normalization utilities..
 
 We accept either:
 - mode='url'  -> download bytes from URL
