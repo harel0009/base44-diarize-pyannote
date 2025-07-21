@@ -10,6 +10,7 @@ import io
 import os
 import base64
 import tempfile
+import subprocess  # Added for ffmpeg fallback
 from typing import Optional
 
 import requests
@@ -63,7 +64,7 @@ def _sf_to_wav16k_mono(raw_bytes: bytes) -> str:
     if data.shape[1] > 1:
         data = data.mean(axis=1, keepdims=True)
     else:
-        data = data[:,0:1]
+        data = data[:, 0:1]
     # Resample if needed
     if sr != 16000:
         if _HAS_TORCHAUDIO:
@@ -76,8 +77,11 @@ def _sf_to_wav16k_mono(raw_bytes: bytes) -> str:
             import math
             ratio = 16000 / sr
             new_len = int(math.ceil(data.shape[0] * ratio))
-            data = np.interp(np.linspace(0, data.shape[0], new_len, endpoint=False),
-                             np.arange(data.shape[0]), data[:,0]).reshape(-1,1)
+            data = np.interp(
+                np.linspace(0, data.shape[0], new_len, endpoint=False),
+                np.arange(data.shape[0]),
+                data[:, 0]
+            ).reshape(-1, 1)
             sr = 16000
     # write temp wav
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
@@ -86,11 +90,27 @@ def _sf_to_wav16k_mono(raw_bytes: bytes) -> str:
 
 
 def ensure_wav_16k_mono(raw_bytes: bytes) -> str:
-    """Return path to temp wav16k mono."""
+    """Return path to temp wav16k mono; fallback to ffmpeg for unsupported formats."""
     try:
         return _sf_to_wav16k_mono(raw_bytes)
-    except Exception as e:
-        raise AudioProcessError(f"Failed to normalize audio: {e}") from e
+    except Exception:
+        # Fallback: decode via ffmpeg (handles webm/opus etc.)
+        try:
+            tmp_webm = tempfile.NamedTemporaryFile(suffix=".input", delete=False).name
+            with open(tmp_webm, "wb") as f:
+                f.write(raw_bytes)
+
+            tmp_wav = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
+            cmd = [
+                "ffmpeg", "-y", "-loglevel", "error",
+                "-i", tmp_webm,
+                "-ac", "1", "-ar", "16000",
+                tmp_wav,
+            ]
+            subprocess.run(cmd, check=True)
+            return tmp_wav
+        except Exception as e:
+            raise AudioProcessError(f"Failed to normalize audio via ffmpeg: {e}") from e
 
 
 def load_audio_to_path(mode: str, url: Optional[str] = None, base64: Optional[str] = None) -> str:
