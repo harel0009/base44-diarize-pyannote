@@ -1,16 +1,16 @@
 """RunPod serverless handler entrypoint for Base44 Diarization Worker."""
 
 import os
+import json
+import traceback
+import sys                          # ← הוספה יחידה
+from typing import Any, Dict
 
 # ------------------------------------------------------------------
 # Inject HF token from RunPod secret if available
 # ------------------------------------------------------------------
 if "RUNPOD_SECRET_HF_TOKEN" in os.environ and os.environ["RUNPOD_SECRET_HF_TOKEN"]:
     os.environ["HF_TOKEN"] = os.environ["RUNPOD_SECRET_HF_TOKEN"]
-
-import json
-import traceback
-from typing import Any, Dict
 
 from env_config import get_config, get_device, log
 from audio_io import load_audio_to_path, AudioFetchError, AudioDecodeError, AudioProcessError
@@ -29,6 +29,9 @@ def _error(msg: str, code: str = "ERROR") -> Dict[str, Any]:
 
 def handler(event: Dict[str, Any]) -> Dict[str, Any]:
     """Main RunPod handler signature."""
+    # DEBUG – אל תסיר: מדפיס את האירוע שמתקבל
+    print("EVENT:", json.dumps(event)[:300], file=sys.stderr)
+
     try:
         inp = event.get("input", {})
         mode = inp.get("mode")
@@ -73,4 +76,3 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
 # ------------------------------------------------------------------
 import runpod
 runpod.serverless.start({"handler": handler})
-
